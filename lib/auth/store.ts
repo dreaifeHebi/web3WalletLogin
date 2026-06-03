@@ -7,6 +7,9 @@ type NonceRecord = {
 type SessionRecord = {
   address: string;
   chainId: number;
+  loginIp: string;
+  browser: string;
+  userAgent: string;
   createdAt: number;
   expiresAt: number;
 };
@@ -71,19 +74,29 @@ export function consumeNonce(nonce: string) {
 
 export function createSession({
   address,
-  chainId
+  chainId,
+  loginIp,
+  browser,
+  userAgent
 }: {
   address: string;
   chainId: number;
+  loginIp: string;
+  browser: string;
+  userAgent: string;
 }) {
   pruneExpired();
 
   const sessionId = randomBytes(32).toString("base64url");
+  const createdAt = Date.now();
   getStore().sessions.set(sessionId, {
     address,
     chainId,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + sessionTtlMs
+    loginIp,
+    browser,
+    userAgent,
+    createdAt,
+    expiresAt: createdAt + sessionTtlMs
   });
 
   return sessionId;
@@ -99,7 +112,11 @@ export function getSession(sessionId: string) {
 
   return {
     address: session.address,
-    chainId: session.chainId
+    chainId: session.chainId,
+    loginIp: session.loginIp ?? "Unknown",
+    browser: session.browser ?? "Unknown browser",
+    userAgent: session.userAgent ?? "",
+    loginAt: new Date(session.createdAt).toISOString()
   };
 }
 

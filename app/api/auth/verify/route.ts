@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SiweMessage } from "siwe";
-import { consumeNonce, createSession } from "@/lib/auth/store";
+import { consumeNonce, createSession, getSession } from "@/lib/auth/store";
 
 export const runtime = "nodejs";
 
@@ -10,6 +10,39 @@ type VerifyRequestBody = {
   message?: string;
   signature?: string;
 };
+
+function getLoginIp(headers: Headers) {
+  const forwardedFor = headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() || "Unknown";
+  }
+
+  return (
+    headers.get("x-real-ip") ??
+    headers.get("cf-connecting-ip") ??
+    headers.get("true-client-ip") ??
+    "Unknown"
+  );
+}
+
+function getBrowser(userAgent: string) {
+  const browserChecks: Array<[RegExp, string]> = [
+    [/Edg\/([\d.]+)/, "Microsoft Edge"],
+    [/OPR\/([\d.]+)/, "Opera"],
+    [/Firefox\/([\d.]+)/, "Firefox"],
+    [/Chrome\/([\d.]+)/, "Chrome"],
+    [/Version\/([\d.]+).*Safari\//, "Safari"]
+  ];
+
+  for (const [pattern, name] of browserChecks) {
+    const match = userAgent.match(pattern);
+    if (match?.[1]) {
+      return `${name} ${match[1].split(".")[0]}`;
+    }
+  }
+
+  return userAgent ? "Unknown browser" : "Unknown";
+}
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as VerifyRequestBody;
@@ -44,13 +77,14 @@ export async function POST(request: NextRequest) {
 
   const sessionId = createSession({
     address: result.data.address,
-    chainId: Number(result.data.chainId)
+    chainId: Number(result.data.chainId),
+    loginIp: getLoginIp(request.headers),
+    browser: getBrowser(request.headers.get("user-agent") ?? ""),
+    userAgent: request.headers.get("user-agent") ?? ""
   });
+  const session = getSession(sessionId);
 
-  const response = NextResponse.json({
-    address: result.data.address,
-    chainId: Number(result.data.chainId)
-  });
+  const response = NextResponse.json(session);
 
   response.cookies.set(sessionCookieName, sessionId, {
     httpOnly: true,

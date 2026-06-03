@@ -12,6 +12,10 @@ import {
 type LoginState = {
   address: string;
   chainId: number;
+  loginIp: string;
+  browser: string;
+  userAgent: string;
+  loginAt: string;
 } | null;
 
 function compactAddress(address?: string) {
@@ -20,6 +24,22 @@ function compactAddress(address?: string) {
   }
 
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function formatLoginTime(loginAt?: string) {
+  if (!loginAt) {
+    return "Not signed in";
+  }
+
+  const date = new Date(loginAt);
+  if (Number.isNaN(date.getTime())) {
+    return loginAt;
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "medium"
+  }).format(date);
 }
 
 export function WalletLoginPanel() {
@@ -135,6 +155,20 @@ export function WalletLoginPanel() {
         <div className="status-item">
           <p className="status-label">Auth mode</p>
           <p className="status-value">SIWE + HTTP-only cookie</p>
+        </div>
+        <div className="status-item">
+          <p className="status-label">Login IP</p>
+          <p className="status-value">{loginState?.loginIp ?? "Not signed in"}</p>
+        </div>
+        <div className="status-item">
+          <p className="status-label">Browser</p>
+          <p className="status-value" title={loginState?.userAgent}>
+            {loginState?.browser ?? "Not signed in"}
+          </p>
+        </div>
+        <div className="status-item">
+          <p className="status-label">Login time</p>
+          <p className="status-value">{formatLoginTime(loginState?.loginAt)}</p>
         </div>
       </div>
 
