@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "missing request host" }, { status: 400 });
   }
 
-  if (!consumeNonce(siwe.nonce)) {
+  if (!(await consumeNonce(siwe.nonce))) {
     return NextResponse.json({ error: "nonce expired or already used" }, { status: 401 });
   }
 
@@ -75,14 +75,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
-  const sessionId = createSession({
+  const sessionId = await createSession({
     address: result.data.address,
     chainId: Number(result.data.chainId),
     loginIp: getLoginIp(request.headers),
     browser: getBrowser(request.headers.get("user-agent") ?? ""),
     userAgent: request.headers.get("user-agent") ?? ""
   });
-  const session = getSession(sessionId);
+  const session = await getSession(sessionId);
 
   const response = NextResponse.json(session);
 

@@ -4,5 +4,5 @@ import { issueNonce } from "@/lib/auth/store";
 export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json({ nonce: issueNonce() });
+  return NextResponse.json({ nonce: await issueNonce() });
 }
