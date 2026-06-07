@@ -148,7 +148,7 @@ export function WalletLoginPanel() {
           </p>
         </div>
         <div className="brand-mark" aria-hidden="true">
-          W3
+          <img src="/dreaifekks-avatar.jpg" alt="" />
         </div>
       </div>
 

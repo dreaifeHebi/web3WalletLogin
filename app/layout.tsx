@@ -4,7 +4,11 @@ import { WalletProviders } from "./providers";
 
 export const metadata: Metadata = {
   title: "web3walletLogin",
-  description: "Wallet login starter using SIWE"
+  description: "Wallet login starter using SIWE",
+  icons: {
+    icon: "/dreaifekks-avatar.jpg",
+    apple: "/dreaifekks-avatar.jpg"
+  }
 };
 
 export default function RootLayout({
