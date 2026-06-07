@@ -42,6 +42,20 @@ function formatLoginTime(loginAt?: string) {
   }).format(date);
 }
 
+function getSiteOrigin() {
+  const { hostname, host, origin, protocol } = window.location;
+  const isLocalHost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]";
+
+  if (protocol === "https:" || isLocalHost) {
+    return origin;
+  }
+
+  return `https://${host}`;
+}
+
 export function WalletLoginPanel() {
   const { address, chainId, isConnected } = useAccount();
   const { connectors, connect, isPending: isConnecting } = useConnect();
@@ -84,11 +98,12 @@ export function WalletLoginPanel() {
 
     const nonceResponse = await fetch("/api/auth/nonce");
     const { nonce } = (await nonceResponse.json()) as { nonce: string };
+    const siteOrigin = getSiteOrigin();
     const siweMessage = new SiweMessage({
       domain: window.location.host,
       address,
       statement: "Sign in to web3walletLogin with this wallet.",
-      uri: window.location.origin,
+      uri: siteOrigin,
       version: "1",
       chainId,
       nonce
